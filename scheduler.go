@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"gronosq/client"
+	"gronosq/core/scheduler"
+
 	"gronosq/config"
 	"gronosq/core/bucket"
 	"gronosq/core/entry"
 	"gronosq/core/partition"
 	"gronosq/core/rdb"
-	redisStore "gronosq/redis-store"
+	"gronosq/core/store/redis-store"
 	"time"
 )
 
@@ -28,10 +29,10 @@ func produce() {
 	r := rdb.Client{}
 	redisClient := r.Get(configuration)
 	prefix := configuration.CommonConfig.Prefix
-	schedulerStore := redisStore.NewRedisSchedulerStore(prefix, redisClient)
+	schedulerStore := redis_store.NewRedisSchedulerStore(prefix, redisClient)
 	timeBucket := bucket.NewSecondGroupedTimeBucket(1)
 	partitioner := partition.NewRandomPartitioner(1)
-	schedulerClient := client.NewSchedulerClient(schedulerStore, timeBucket, partitioner)
+	schedulerClient := scheduler.NewScheduler(schedulerStore, timeBucket, partitioner)
 	for {
 		u, _ := uuid.NewUUID()
 		millis := getScheduledTime()
